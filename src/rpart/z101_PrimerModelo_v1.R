@@ -9,8 +9,7 @@ require("rpart.plot")
 #Aqui se debe poner la carpeta de la materia de SU computadora local
 setwd("C:\\Maestria\\DMEyF\\")  #Establezco el Working Directory
 
-#cargo el dataset
-dataset  <- fread("./datasets/competencia1_2022.csv")
+#cargo el datasetdataset  <- fread("./datasets/competencia1_2022.csv")
 
 dtrain  <- dataset[ foto_mes==202101 ]  #defino donde voy a entrenar
 dapply  <- dataset[ foto_mes==202103 ]  #defino donde voy a aplicar el modelo
@@ -20,9 +19,9 @@ modelo  <- rpart(formula=   "clase_ternaria ~ .",  #quiero predecir clase_ternar
                  data=      dtrain,  #los datos donde voy a entrenar
                  xval=      0,
                  cp=       -0.3,   #esto significa no limitar la complejidad de los splits
-                 minsplit=  0,     #minima cantidad de registros para que se haga el split
-                 minbucket= 1,     #tamaño minimo de una hoja
-                 maxdepth=  4 )    #profundidad maxima del arbol
+                 minsplit=  10,     #minima cantidad de registros para que se haga el split
+                 minbucket= 5,     #tamaño minimo de una hoja
+                 maxdepth=  7 )    #profundidad maxima del arbol
 
 
 #grafico el arbol
