@@ -5,7 +5,8 @@ require("data.table")
 require("rpart")
 require("parallel")
 
-ksemillas  <- c(102191, 200177, 410551, 552581, 892237 ) #reemplazar por las propias semillas
+# ksemillas  <- c(102191, 200177, 410551, 552581, 892237 ) #reemplazar por las propias semillas
+ksemillas <- c(851159,773567,807797,216617,324757)
 
 #------------------------------------------------------------------------------
 #particionar agrega una columna llamada fold a un dataset que consiste en una particion estratificada segun agrupa
@@ -61,8 +62,7 @@ ArbolEstimarGanancia  <- function( semilla, param_basicos )
 #------------------------------------------------------------------------------
 
 #Aqui se debe poner la carpeta de la computadora local
-setwd("D:\\gdrive\\UBA2022\\")   #Establezco el Working Directory
-#cargo los datos
+setwd("C:\\Maestria\\dmeyf\\")
 
 #cargo los datos
 dataset  <- fread("./datasets/competencia1_2022.csv")
@@ -102,3 +102,4 @@ tb_salida[  , mean( ganancia_test ) ]
 tb_salida[  , lapply( .SD, mean ) ]
 
 #desvio estandar Distribucion Binomial   sqrt( n * p * (1-p) )
+
