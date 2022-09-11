@@ -19,9 +19,10 @@ require("ggplot2")
 require("dplyr")
 
 # Poner la carpeta de la materia de SU computadora local
-setwd("C:\\Maestria\\DMEyF\\")
+setwd("C:\\Maestria\\dmeyf\\")
 # Poner sus semillas
 semillas <- c(851159,773567,807797,216617,324757)
+
 
 # Cargamos el dataset
 dataset <- fread("./datasets/competencia1_2022.csv")
@@ -169,7 +170,7 @@ calcular_ganancia(modelo3, dtest)
 
 ## Actividad para medir bien la influencia de la media en de esa variable, 
 ## escriba una función de experimento que refleje la transformación  
- 
+
 experimento <- function() {
     gan <- c()
     for (s in semillas) {
@@ -178,17 +179,7 @@ experimento <- function() {
             list = FALSE)
         train  <-  dataset[in_training, ]
         test   <-  dataset[-in_training, ]
-        ################
-        mean_Visa_fechaalta <- mean(train$Visa_fechaalta, na.rm = T)
-        # Imputamos los nulos de nuestra variable con la media
-        train[, Visa_fechaalta:= ifelse(is.na(Visa_fechaalta), 
-            mean_Visa_fechaalta,
-            Visa_fechaalta)] 
 
-        test[, Visa_fechaalta := ifelse(is.na(Visa_fechaalta), 
-            mean_Visa_fechaalta,
-            Visa_fechaalta)] 
-        ###################
         r <- rpart(clase_binaria ~ .,
                     data = train,
                     xval = 0,
@@ -201,8 +192,7 @@ experimento <- function() {
     }
     mean(gan)
 }
-experimento()
- # para cada train test, saco la media de train y se lo imputo a train y a test
+
 # Veamos la 
 ## Preguntas
 ## - ¿Qué sucede si una transformación que depende del dataset no se aplica de
@@ -274,13 +264,14 @@ print(modelo_cq_2)
 ## - Mirando los puntos de corte de los dos modelos ¿Existe una relación
 ##   matermática entre ellos?
 ## - ¿Es útil una transformación monótona en los árboles de decisión?
-# No sirve aplicar funciòn. Cortò igual
+
 ## ---------------------------
 ## Step 7: Outliers - Una más y no jodemos más 
 ## ---------------------------
 
 dtrain[, r_ctrx_quarter := ntile(ctrx_quarter, 10)]
 dtest[, r_ctrx_quarter := ntile(ctrx_quarter, 10)]
+summary(dtrain[r_ctrx_quarter==2]$ctrx_quarter)
 
 modelo_cq_4 <- rpart(clase_binaria ~ . - ctrx_quarter - ctrx_quarter_2 - Visa_fechaalta_2 - Visa_fechaalta_3,
                     data = dtrain,
