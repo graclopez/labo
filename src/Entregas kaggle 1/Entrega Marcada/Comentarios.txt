@@ -1,0 +1,3 @@
+De la lista de hiperparámetros ordenados por ganancia de forma descendente scoree con los mejores y con los de la fila 11.
+Localmente, los de la fila 11, arrojaban una ganancia no muy inferior. En el publico de kaggle dieron lo mismo.
+Me terminé inclinando por la 11. Temí al overfiting y prioricé una menor profundidad del arbol y hojas mas grandes.
