@@ -47,9 +47,10 @@ require("randomForest")
 require("lightgbm")
 
 # Poner la carpeta de la materia de SU computadora local
-setwd("/home/aleb/dmeyf2022")
+setwd("C:\\Maestria\\dmeyf\\")
 # Poner sus semillas
-semillas <- c(17, 19, 23, 29, 31)
+semillas <- c(851159,773567,807797,216617,324757)
+
 
 # Cargamos los datasets y nos quedamos solo con 202101 y 202103
 dataset <- fread("./datasets/competencia2_2022.csv.gz")

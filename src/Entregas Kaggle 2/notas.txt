@@ -1,0 +1,2 @@
+G001_lightgbm_final.r --> genera la entrega con la fila 1 de la planilla
+G002_lightgbm_final.r --> genera la entrega con la otra fila marcada en la planilla
