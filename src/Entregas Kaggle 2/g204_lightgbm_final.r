@@ -16,19 +16,19 @@ require("lightgbm")
 #defino los parametros de la corrida, en una lista, la variable global  PARAM
 #  muy pronto esto se leera desde un archivo formato .yaml
 PARAM <- list()
-PARAM$experimento  <- "DataClean"
+PARAM$experimento  <- "HT_LGBM_Norm_Final2"
 
-PARAM$input$dataset       <- "./datasets/data_clean.csv"
+PARAM$input$dataset       <- "./datasets/data_normalizada.csv.gz"
 PARAM$input$training      <- c( 202103 )
 PARAM$input$future        <- c( 202105 )
 
 PARAM$finalmodel$max_bin           <-     31
-PARAM$finalmodel$learning_rate     <-      0.0056112702   #0.0142501265
-PARAM$finalmodel$num_iterations    <-    1216 #615
-PARAM$finalmodel$num_leaves        <-   82 #784
-PARAM$finalmodel$min_data_in_leaf  <-   5542  #5628
-PARAM$finalmodel$feature_fraction  <-      0.9621205703  #0.8382482539
-PARAM$finalmodel$semilla           <- 102191
+PARAM$finalmodel$learning_rate     <-      0.0200823753839386   #0.0142501265
+PARAM$finalmodel$num_iterations    <-    200 #615
+PARAM$finalmodel$num_leaves        <-   548 #784
+PARAM$finalmodel$min_data_in_leaf  <-   2300  #5628
+PARAM$finalmodel$feature_fraction  <-     0.468954008253478  #0.8382482539
+PARAM$finalmodel$semilla           <- 851159
 
 #------------------------------------------------------------------------------
 #------------------------------------------------------------------------------

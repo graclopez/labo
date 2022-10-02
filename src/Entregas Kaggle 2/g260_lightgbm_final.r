@@ -16,19 +16,19 @@ require("lightgbm")
 #defino los parametros de la corrida, en una lista, la variable global  PARAM
 #  muy pronto esto se leera desde un archivo formato .yaml
 PARAM <- list()
-PARAM$experimento  <- "DataClean"
+PARAM$experimento  <- "HT_LGBM_Norm_fechas_Entr"
 
-PARAM$input$dataset       <- "./datasets/data_clean.csv"
+PARAM$input$dataset       <- "./datasets/data_norm_fechas.csv.gz"
 PARAM$input$training      <- c( 202103 )
 PARAM$input$future        <- c( 202105 )
 
 PARAM$finalmodel$max_bin           <-     31
-PARAM$finalmodel$learning_rate     <-      0.0056112702   #0.0142501265
-PARAM$finalmodel$num_iterations    <-    1216 #615
-PARAM$finalmodel$num_leaves        <-   82 #784
-PARAM$finalmodel$min_data_in_leaf  <-   5542  #5628
-PARAM$finalmodel$feature_fraction  <-      0.9621205703  #0.8382482539
-PARAM$finalmodel$semilla           <- 102191
+PARAM$finalmodel$learning_rate     <-      0.0322508315037225   #0.0142501265
+PARAM$finalmodel$num_iterations    <-    303 #615
+PARAM$finalmodel$num_leaves        <-   596 #784
+PARAM$finalmodel$min_data_in_leaf  <-   2037  #5628
+PARAM$finalmodel$feature_fraction  <-      0.255714696326377  #0.8382482539
+PARAM$finalmodel$semilla           <- 216617
 
 #------------------------------------------------------------------------------
 #------------------------------------------------------------------------------
@@ -120,7 +120,8 @@ setorder( tb_entrega, -prob )
 
 #genero archivos con los  "envios" mejores
 #deben subirse "inteligentemente" a Kaggle para no malgastar submits
-cortes <- seq( 5000, 12000, by=500 )
+#cortes <- seq( 8600, 9600, by=131 )
+cortes <- c(8500,8953,9000)
 for( envios  in  cortes )
 {
   tb_entrega[  , Predicted := 0L ]
