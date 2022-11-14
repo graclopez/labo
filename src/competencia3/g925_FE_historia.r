@@ -361,6 +361,20 @@ if( PARAM$lag2 )
   }
 }
 
+if( PARAM$lag2 )
+{
+  #creo los campos lags de orden 2
+  dataset[ , paste0( cols_lagueables, "_lag3") := shift(.SD, 3, NA, "lag"), 
+             by= numero_de_cliente, 
+             .SDcols= cols_lagueables ]
+
+  #agrego los delta lags de orden 2
+  for( vcol in cols_lagueables )
+  {
+    dataset[ , paste0(vcol, "_delta3") := get(vcol)  - get(paste0( vcol, "_lag3"))  ]
+  }
+}
+
 
 #--------------------------------------
 #agrego las tendencias
@@ -402,7 +416,7 @@ if( PARAM$RandomForest )
 if( PARAM$CanaritosAsesinos )
 {
   ncol( dataset )
-  CanaritosAsesinos( canaritos_ratio = 0.3 )
+  CanaritosAsesinos( canaritos_ratio = 0.15 )
   ncol( dataset )
 }
 

@@ -15,13 +15,13 @@ require("lightgbm")
 
 #Parametros del script
 PARAM  <- list()
-PARAM$experimento  <- "Kaggle_Comp3_E2_851159_3"
-PARAM$exp_input  <- "HT_Comp3_E2_851159"
+PARAM$experimento  <- "ZZ_EXP_COL_CAN_15"
+PARAM$exp_input  <- "HT_EXP_COL_CAN_15"
 
 PARAM$modelos  <- 5
 # FIN Parametros del script
 
-ksemilla  <- 851159
+ksemilla  <- 936659
 
 #------------------------------------------------------------------------------
 options(error = function() { 
@@ -152,7 +152,7 @@ for( i in  1:PARAM$modelos )
 
 
   #genero los archivos para Kaggle
-  cortes  <- seq( from=  10000,
+  cortes  <- seq( from=  7000,
                   to=   16000,
                   by=     500 )
 
@@ -188,4 +188,3 @@ for( i in  1:PARAM$modelos )
   rm( dtrain )
   gc()
 }
-

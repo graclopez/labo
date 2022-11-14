@@ -21,9 +21,10 @@ require("mlrMBO")
 
 #Parametros del script
 PARAM  <- list()
-PARAM$experimento <- "HT_Comp3_E2_851159"
+PARAM$experimento <- "HT_EXP_COL_CAN_40"
 
-PARAM$exp_input  <- "TS_Comp3_E2_9meses"
+PARAM$exp_input  <- "TS_EXP_COL_CAN_40"
+
 # FIN Parametros del script
 
 
@@ -35,7 +36,7 @@ options(error = function() {
 })
 #------------------------------------------------------------------------------
 
-ksemilla  <- 851159     #  773567, 807797
+ksemilla  <- 936659
 
 kcrossvalidation_folds  <- 5  #En caso que se haga cross validation, se usa esta cantidad de folds
 
@@ -73,15 +74,15 @@ param_lgb_basicos  <- list(
 
 #Aqui se cargan los hiperparametros que se optimizan en la Bayesian Optimization
 hs <- makeParamSet( 
-         makeNumericParam("learning_rate",    lower=    0.01, upper=  0.3),
-         makeNumericParam("feature_fraction", lower=    0.2 , upper=  0.8),
+         makeNumericParam("learning_rate",    lower=    0.005, upper=  0.3),
+         makeNumericParam("feature_fraction", lower=    0.3 , upper=  0.9),
          makeNumericParam("coverage",         lower=    0.05, upper=  1.0),
          makeNumericParam("leaf_size_log",    lower=    1.0 , upper= 12.0)
         )
 
 
 #si usted es ambicioso, y tiene paciencia, podria subir este valor a 100
-kBO_iteraciones  <- 50  #iteraciones de la Optimizacion Bayesiana
+kBO_iteraciones  <- 100  #iteraciones de la Optimizacion Bayesiana
 
 #------------------------------------------------------------------------------
 #graba a un archivo los componentes de lista
@@ -363,8 +364,8 @@ dtrain  <- lgb.Dataset( data=    data.matrix( dataset[ fold_train==1, campos_bue
                       )
 
 
-kvalidate  <- FALSE
-ktest  <- FALSE
+kvalidate  <- TRUE
+ktest  <- TRUE
 kcrossvalidation  <- TRUE
 
 #Si hay que hacer validacion
@@ -457,4 +458,3 @@ if( !file.exists( "bayesiana.RDATA" ) ) {
   #  usado para cuando se corta la virtual machine
   run  <- mboContinue( "bayesiana.RDATA" )   #retomo en caso que ya exista
 }
-

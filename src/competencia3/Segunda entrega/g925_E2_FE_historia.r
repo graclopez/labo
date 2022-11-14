@@ -19,7 +19,7 @@ require("lightgbm")
 
 #Parametros del script
 PARAM  <- list()
-PARAM$experimento <- "FEH_Comp3_E2_9meses_lag3"
+PARAM$experimento <- "FEH_Comp3_E2_lag3"
 
 PARAM$exp_input  <- "FE_Comp3_E2_rank0_propia"
 
