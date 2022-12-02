@@ -1,0 +1,405 @@
+---
+title: "Variables Instrumentales, caso de aplicación: Estimación de los retornos de la educación sobre el ingreso en Argentina"
+author: "Graciela López y Germán Daniel Pestchanker"
+date: "2022-12-03"
+output:
+  html_document:
+    toc: yes
+    toc_float: yes
+    df_print: paged
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Preparación de los datos
+
+## Cargo liberías
+
+
+```{r Instalación de paquetes necesarios, eval=FALSE, message=FALSE, warning=FALSE, include=FALSE}
+#options(repos = c(CRAN = "http://cran.rstudio.com"))
+
+#install.packages("tidyverse")
+#install.packages("ggthemes")
+#install.packages("ggridges")
+#install.packages("data.table")
+#install.packages("eph")
+#install.packages("rtools")
+
+#devtools::install_github("holatam/eph")
+
+```
+*Carga de librerías*
+
+```{r Cargo Liberías, message=FALSE, warning=FALSE}
+
+#library(tidyverse)
+#library(tidymodels)
+#library(lubridate) 
+#library(corrr)
+#library(kableExtra)
+#library(knitr)
+#library(ggplot2)
+#library(GGally)
+#library(gridExtra)
+#library(corrplot)
+#library(reshape)
+
+
+library(tidyverse)
+library(ggthemes)
+library(ggridges)
+library(data.table)
+library(eph)
+library(tidymodels)
+
+
+
+```
+
+
+
+# Carga de Datos <br>
+**Leemos la base de individuos de la Encuesta Permanente de Hogares (EPH)** <br>
+
+
+```{r Lectura de la EPH, message=FALSE, warning=FALSE}
+#Lectura de datos: Importación de la EPH del 2T22
+#Manual de la EPH https://www.indec.gob.ar/ftp/cuadros/menusuperior/eph/EPH_registro_2T2022.pdf
+
+base_individual <- get_microdata(year = 2022,
+                                  trimester = 2,
+                                  type='individual',
+                                  vars = c('CODUSU','NRO_HOGAR','COMPONENTE','CH03','CH06','CH14','NIVEL_ED','ESTADO','P21')) 
+
+
+```
+**Nos quedamos únicamente con los campos de interés:** <br>
+**CODUSU:**     Código para distinguir VIVIENDAS <br>
+**NRO_HOGAR:**  Código para distinguir hogares  <br>
+**COMPONENTE:** Nro de orden que se asigna a las personas que conforman cada hogar de la vivienda. <BR>
+**CH03:**       Relación de parentesco. Los códigos de interés son: <br>
+                    01 = Jefe/a   03 = Hijo / hijastro/a   06 = Madre / padre  <br>
+**CH06:**       Edad (años cumplidos) <br>
+**CH14:**       Cual fue el ultimo año que aprobó
+**NIVEL_ED:**   Nivel educativo del individuo. <br>
+**ESTADO:**     Condición de actividad. El código de interes es 1 = Ocupado <br>.
+**P21:**        Ingreso por actividad principal. <br>      
+
+
+```{r}
+View(base_individual)
+```
+Armamos un dataset con los individuos en rol HIJO, mayores de edad (>=18 años), en estado OCUPADO y con ingreso >0
+```{r}
+# HIJOS
+base_individual_HIJOS <- base_individual  %>% 
+    filter(CH03==3, CH06>=18, ESTADO==1, P21>0)
+
+```
+```{r}
+View(base_individual_HIJOS)
+```
+En otro dataset vamos a tener la informacion de individuos en el rol JEFE/A, en estado OCUPADO y con ingreso >0
+```{r}
+# JEFE/A
+
+base_individual_JEFE <- base_individual  %>% 
+    select(CODUSU,NRO_HOGAR,COMPONENTE,CH03,ESTADO,P21)  %>%
+    filter(CH03==1, ESTADO==1, P21>0)
+
+base_individual_JEFE <- base_individual_JEFE %>% 
+                        rename(CH03_1 = CH03)  %>%
+                        rename(P21_1 = P21) %>%
+                        rename(ESTADO_1 = ESTADO)
+
+  
+```
+```{r}
+View(base_individual_JEFE)
+```
+Generamos un tercer dataset con la informacion de individuos en el rol PADRE/MADRE, en estado OCUPADO y con ingreso >0
+
+```{r}
+# PADRE/MADRE
+
+base_individual_PADRE <- base_individual  %>% 
+    select(CODUSU,NRO_HOGAR,COMPONENTE,CH03,ESTADO,P21)  %>%
+    filter(CH03==6, ESTADO==1, P21>0)
+
+base_individual_PADRE <- base_individual_PADRE %>% 
+                        rename(CH03_6 = CH03)  %>%
+                        rename(P21_6 = P21) %>%
+                        rename(ESTADO_6 = ESTADO)
+
+ 
+```
+```{r}
+View(base_individual_PADRE)
+```
+Unimos los tres dataset por igualdad de los campos CODUSU + NRO_HOGAR. <br>
+De esta manera tenemos en un único registros por hogar, la información del HIJO, del JEFE/A y MADRE/PADRE. <br>
+```{r}
+# JOIN POR HOGAR
+# ENTRE HIJO Y JEFE/A
+base <- base_individual_HIJOS %>%
+        left_join(., base_individual_JEFE, by =c("CODUSU","NRO_HOGAR"))
+
+View(base)  
+```
+
+```{r}
+
+# ENTRE HIJO Y PADRE/MADRE
+base <- base %>%
+        left_join(., base_individual_PADRE, by = c("CODUSU","NRO_HOGAR"))
+
+View(base)
+```
+Eliminamos aquellos registros que tengan valor nulo en P21_1 y en P21_6  <br>
+```{r}
+base_final <- base %>%
+              filter(!is.na(base$P21_1) | !is.na(base$P21_6))
+View(base_final)
+
+```
+Imputamos en cero el campo P21 de JEFE/A y MADRE/PADRE para los casos nulos.  <br>
+```{r}
+base_final <- base_final %>%
+              mutate(P21_6 = replace_na(P21_6, 0))
+              
+
+```
+```{r}
+base_final <- base_final %>%
+              mutate(P21_1 = replace_na(P21_1, 0))
+
+
+```
+Transformamos el ingreso de los padres como la suma entre P21 del JEFE/A y P21 de MADRE/PADRE. <br>
+Esta será nuestra **VARIABLE INSTRUMENTAL "Z" = Ingreso_padres**
+```{r}
+base_final <- base_final %>%
+              mutate(Ingreso_Padres = P21_1 + P21_6)
+
+View(base_final)
+```
+
+Transformamos el nivel de educacion en años de estudio. <br>
+Convención: <br>
+1 = PRIMARIO INCOMPLETO   -> 4 <BR>
+2 = PRIMARIO COMPLETO     -> 9 <BR>
+3 = SECUNDARIO INCOMPLETO -> 11 <BR>
+4 = SECUNDARIO COMPLETO   -> 14 <BR>
+5 = UNIVERSIT INCOMPLETO  -> 20 + CH14 <BR>
+6 = UNIVERSIT COMPLETO    -> 26 <BR>
+<br>
+Tomamos esta convención para evitar las difenentes modalidades de escolaridad polimodal, egb, etc. <br>
+```{r}
+base_final <- base_final %>% 
+  mutate(anios_estudio = case_when(NIVEL_ED == 1 ~ 4,
+                                   NIVEL_ED == 2 ~ 9,
+                                   NIVEL_ED == 3 ~11,
+                                   NIVEL_ED == 4 ~14,
+                                   NIVEL_ED == 5 ~20 + as.numeric(CH14),
+                                   NIVEL_ED == 6 ~26,
+                                   NIVEL_ED == 7 ~0,
+                                   NIVEL_ED == 9 ~0))
+```
+Borro los hogares outliers
+```{r}
+base_final <- base_final %>%
+              filter(!CODUSU %in% c('TQRMNOPRXHMMLNCDEFIAH00781729','TQRMNOQSSHLMQNCDEIJAH00786030','TQRMNOSYXHMMKUCDEGJBF00704280','TQRMNOPTRHMNKUCDEGNFJ00702224'))
+  
+```
+```{r}
+View(base_final)
+  
+```
+Verificación de supuesto: <br>
+La correlación entre la variable instrumento y la covariable. <br>
+Indice de correlación de Pearson
+```{r warning=FALSE}
+library(corrr)
+#cor(base_final$Ingreso_Padres, base_final$anios_estudio) # pearson por default
+cor.test(base_final$Ingreso_Padres, base_final$anios_estudio, method = "spearman")
+
+  
+```
+## Paso 0: Regresion lineal sin variable intrumental <br>
+
+$log(IngresoP21) = \beta_0 + \beta_1*X + u$$   <br>
+
+X = Años de educación <br>
+
+```{r}
+
+#Agregamos la variable log(Ingreso)
+log.P21 = log(base_final$P21)
+
+#La agregamos al dataset
+base_final <- base_final %>%
+  mutate(log.P21)
+
+#Gráfico qqplot de la variable Ingreso
+
+qqnorm(base_final$P21, main="QQPlot Normal del Ingreso")
+qqline(base_final$P21, col = 2)
+
+#Gráfico qqplot de la variable log(Ingreso)
+
+qqnorm(log.P21, main="QQPlot Normal del log(ingreso)")
+qqline(log.P21, col = 2)
+
+
+```
+
+Hay mayor normalidad en la transformación logarítmica del Ingreso individual, por lo que de acá en adelante utilizaremos el modelo log-nivel.
+
+
+
+```{r}
+
+modelo_basico = lm(formula = log.P21 ~ anios_estudio, data = base_final)
+  
+```
+
+```{r}
+valores <- tidy(modelo_basico, conf.int = TRUE)
+valores
+
+```
+
+Interpretación del $\beta_1$: Por cada año adicional de estudios, el Ingreso del Individuo esperado aumenta en 1.3%. 
+
+Para la evaluación, primero hay que cambiar la escala con el antilog:
+
+```{r}
+#Evaluación
+
+#Modelos aumentados
+modelobasico_aumentado = augment(x=modelo_basico, data=base_final)  
+
+
+#Antilog de modelos
+
+modelo_a = as.data.frame(modelobasico_aumentado %>%  mutate(fitted_antilog = exp(.fitted)))
+
+metricas = metrics(data = modelobasico_aumentado, truth = P21, estimate = .fitted) %>% mutate(.estimate = round(.estimate, 3))
+metricas
+
+```
+Sin sorpresas, da un R cuadrado bajísimo (2.4%), al no cumplirse algunos supuestos del modelo lineal (que comentaremos a continuación) y el problema de endogeneidad a tratar con variable instrumental.
+
+
+
+
+## Diagnóstico del modelo MCO <br>
+<br>
+**1) Normalidad de los residuos.** <br>
+
+```{r}
+
+  ggplot(modelobasico_aumentado, aes(sample= .std.resid))+
+  stat_qq()+
+  geom_abline() +
+  theme_bw() +
+  labs(title = "Normal QQ plot")
+```
+Se observa que la distribución de los residuos no cumple con el supuesto de normalidad.  <br>
+<br>
+<br>
+**2) Homocedasticidad**
+```{r}
+ggplot(modelobasico_aumentado, aes(.fitted, .resid)) +
+  geom_point()+
+  geom_hline(size = 1, colour = "grey", linetype="dashed", yintercept = 0) +
+  geom_smooth(se = FALSE) +
+  theme_bw() +
+  labs(title = "Residuos vs valores predichos")
+```
+No se verifica homocesaticidad. <br>
+<br>
+<br>
+**3)Verificacion de existencia de puntos influyentes**
+```{r}
+ggplot(modelobasico_aumentado, 
+       aes(.hat, .std.resid)) +
+  geom_vline(size = 2, colour = "white", xintercept = 0) +
+  geom_hline(size = 2, colour = "white", yintercept = 0) +
+  geom_point() + 
+  geom_smooth(se = FALSE) + 
+  theme_bw() +
+  labs(title = "Residual vs leverage")
+
+
+```
+
+No hay presencia de presencia de puntos con alta palanca (.hat>0.5)
+
+Al no cumplirse normalidad y homocedasticidad, además de la endogeneidad propia que intentamos resolver, hay que tomar los resultados de esta regresión simple con precaución.
+
+
+## MC2E <br>
+Vamos a considerar la variable instrumental: Z= Ingreso_Padres
+
+**Paso 1: Corremos la regresion simple con la variable instrumental.** <br>
+
+$ \hat{X} = \theta_0 + \theta_1*Z + u$  <br>
+
+```{r}
+modelo_V1_E1 = lm(formula = anios_estudio ~ Ingreso_Padres, data = base_final)
+summary(modelo_V1_E1)
+
+```
+**Obtenemos años de educacion estimados**
+```{r}
+anios_hat = predict(modelo_V1_E1)
+
+```
+
+**MC2E** <br>
+**Paso 2: Corremos la regresion simple con la variable estimada en el paso 1.** <br>
+
+$log(IngresoP21) = \beta_0 + \beta_1*X + u$$   <br>
+
+```{r}
+modelo_V1_E2 = lm(formula = log.P21 ~ anios_hat, data = base_final)
+summary(modelo_V1_E2)
+```
+Interpretación del $\beta_1$: Por cada año adicional de estudios, el Ingreso del Individuo esperado aumenta en 13%. 
+
+
+
+```{r}
+compara_modelos <- list(modelo_basico = modelo_basico, modelo_V1_E2 = modelo_V1_E2)
+# calculamos las variables resumen
+map_df(compara_modelos, tidy, .id = "model")
+```
+```{r}
+summary(modelo_basico)
+```
+
+```{r}
+summary(modelo_V1_E2)
+```
+
+En ambos modelos los $\beta_1$ estimados son muy significativos (p-valor << 0.05). En el Modelo con la Variable Instrumental del Ingreso de los Padres, el efecto marginal de los años de educación sobre el salario es 10 veces mayor al del Modelo sin tratar la endogeneidad. En el [Wooldridge, 2010] también la magnitud del $\beta_1$ de MC2E es superior al del MCO.
+
+El R Cuadrado del modelo con variable instrumental no tiene sentido compararlo (Parafraseando [Wooldridge, 2010]: "cuando la covariable y el error están correlacionados, no se puede descomponer la varianza de y").Tiene sentido para tener una noción de bondad de ajuste del modelo inicial, y luego para MC2E lo relevante es que se cumplan los supuestos.
+
+
+# Referencias
+
+* Diego Kozlowski, Pablo Tiscornia, Guido Weksler, German Rosati and Natsumi Shokida (2020). eph: Argentina's Permanent Household Survey Data and Manipulation Utilities. R package version https://doi.org/10.5281/zenodo.3462677
+
+
+* Apunte de Regresión Lineal. María Eugenia Szretter Noste. Carrera de Especialización en Estadística. para Ciencias de la Salud. Facultad de Ciencias Exactas y Naturales, Universidad de Buenos Aires. Agosto - Octubre de 2017
+
+* The Elements of Statistical Learning:https://web.stanford.edu/~hastie/Papers/ESLII.pdf
+
+* Materiales del curso de Enfoque Estadístico del Aprendizaje de la Maestría de Ciencia de Datos de la Universidad de Buenos Aires. https://eea-uba.github.io/EEA-2022/
+
+* Introducción a la Econometría: Un Enfoque Moderno (4a. ed.). Wooldridge, J. M. (2010).  México: Cengage Learning
