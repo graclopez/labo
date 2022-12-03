@@ -236,7 +236,7 @@ El otro supuesto que debe cumplir es el de exogeneidad: que la variable instrume
 
 ## Paso 0: Regresion lineal sin variable intrumental <br>
 
-$log(IngresoP21) = \beta_0 + \beta_1*X + u$$   <br>
+$log(IngresoP21) = \beta_0 + \beta_1*X +u$   <br>
 
 X = Años de educación <br>
 <br>
@@ -356,7 +356,7 @@ Vamos a considerar la variable instrumental: Z= Ingreso_Padres
 
 **Paso 1: Corremos la regresion simple con la variable instrumental.** <br>
 
-$ \hat{X} = \theta_0 + \theta_1*Z + u $  <br>
+$\hat{X} = t_0 + t_1*Z + u$ <br>
 
 ```{r}
 modelo_V1_E1 = lm(formula = anios_estudio ~ Ingreso_Padres, data = base_final)
@@ -372,7 +372,7 @@ anios_hat = predict(modelo_V1_E1)
 **MC2E** <br>
 **Paso 2: Corremos la regresion simple con la variable estimada en el paso 1.** <br>
 
-$log(IngresoP21) = \beta_0 + \beta_1*X + u $   <br>
+$log(IngresoP21) = \beta_0 + \beta_1*X +u$   <br>
 
 ```{r}
 modelo_V1_E2 = lm(formula = log.P21 ~ anios_hat, data = base_final)
